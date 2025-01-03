@@ -189,7 +189,7 @@ useradd -m -G wheel "${user_username}"
 echo "${user_username}:${user_password}" | chpasswd
 
 cd "/home/${user_username}""
-su -c "git clone https://aur.archlinux.org/yay.git"
+su -c "git clone https://aur.archlinux.org/yay.git" "${user_username}"
 cd yay
 su -c "makepkg -s" "${user_username}"
 pacman -U --noconfirm *.pkg.tar.zst
