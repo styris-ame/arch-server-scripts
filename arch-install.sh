@@ -188,6 +188,8 @@ echo "root:${root_password}" | chpasswd
 useradd -m -G wheel "${user_username}"
 echo "${user_username}:${user_password}" | chpasswd
 
+pacman -S --noconfirm go
+
 cd "/home/${user_username}"
 su -c "git clone https://aur.archlinux.org/yay.git" "${user_username}"
 cd yay
