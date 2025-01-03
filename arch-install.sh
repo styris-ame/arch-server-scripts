@@ -266,7 +266,7 @@ EOF
 chmod +x /mnt/root/arch-install.sh
 
 echo "" >> /mnt/etc/profile
-echo "sudo /root/arch-install.sh'" >> /mnt/etc/profile
+echo "sudo /root/arch-install.sh" >> /mnt/etc/profile
 
 echo "" >> /mnt/etc/sudoers
 echo "%wheel ALL=(ALL:ALL) NOPASSWD: /root/arch-install.sh" >> /mnt/etc/sudoers
