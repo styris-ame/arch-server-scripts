@@ -13,12 +13,12 @@ echo -e "${PURPLE}╚═══════════════════�
 echo ""
 
 echo -ne "${ORANGE}[1/6]${RESET} "; read -p "Enter desired root password: " root_password
-echo -ne "${ORANGE}[1/6]${RESET} "; read -p "Enter desired user username: " user_username
-echo -ne "${ORANGE}[1/6]${RESET} "; read -p "Enter desired user password: " user_password
+echo -ne "${ORANGE}[2/6]${RESET} "; read -p "Enter desired user username: " user_username
+echo -ne "${ORANGE}[3/6]${RESET} "; read -p "Enter desired user password: " user_password
 
-echo -ne "${ORANGE}[1/6]${RESET} "; read -p "Enter desired hostname: " hostname
-echo -ne "${ORANGE}[1/6]${RESET} "; read -p "Enter desired IP address: " ip_address
-echo -ne "${ORANGE}[1/6]${RESET} "; read -p "Enter desired default gateway: " default_gateway
+echo -ne "${ORANGE}[4/6]${RESET} "; read -p "Enter desired hostname: " hostname
+echo -ne "${ORANGE}[5/6]${RESET} "; read -p "Enter desired IP address: " ip_address
+echo -ne "${ORANGE}[6/6]${RESET} "; read -p "Enter desired default gateway: " default_gateway
 
 
 
