@@ -217,6 +217,7 @@ cleanup() {
 trap cleanup EXIT
 
 sed -i '$d; $d' /etc/profile
+sed -i '$d; $d' /etc/sudoers
 
 # Define color codes
 PURPLE="\033[1;35m"
@@ -265,7 +266,10 @@ EOF
 chmod +x /mnt/root/arch-install.sh
 
 echo "" >> /mnt/etc/profile
-echo "echo '${user_password}' | sudo -S bash '/root/arch-install.sh'" >> /mnt/etc/profile
+echo "sudo /root/arch-install.sh'" >> /mnt/etc/profile
+
+echo "" >> /mnt/etc/sudoers
+echo "%wheel ALL=(ALL:ALL) NOPASSWD: /root/arch-install.sh" >> /mnt/etc/sudoers
 
 umount -R /mnt
 
