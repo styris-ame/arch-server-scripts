@@ -20,7 +20,7 @@ echo -ne "${ORANGE}[4/6]${RESET} "; read -p "Enter desired hostname: " hostname
 echo -ne "${ORANGE}[5/6]${RESET} "; read -p "Enter desired IP address: " ip_address
 echo -ne "${ORANGE}[6/6]${RESET} "; read -p "Enter desired default gateway: " default_gateway
 
-
+echo ""
 
 INTERFACE=$(ip route | grep '^default' | awk '{print $5}')
 
@@ -187,6 +187,8 @@ echo "root:${root_password}" | chpasswd
 
 useradd -m -G wheel "${user_username}"
 echo "${user_username}:${user_password}" | chpasswd
+
+cd "/home/${user_username}"
 
 git clone https://aur.archlinux.org/yay.git
 cd yay
