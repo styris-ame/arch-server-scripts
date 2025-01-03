@@ -188,8 +188,8 @@ echo "root:${root_password}" | chpasswd
 useradd -m -G wheel "${user_username}"
 echo "${user_username}:${user_password}" | chpasswd
 
-git clone https://aur.archlinux.org/yay.git
-chmod -R 777 yay
+cd "/home/${user_username}""
+su -c "git clone https://aur.archlinux.org/yay.git"
 cd yay
 su -c "makepkg -s" "${user_username}"
 pacman -U --noconfirm *.pkg.tar.zst
