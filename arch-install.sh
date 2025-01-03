@@ -34,7 +34,7 @@ sgdisk -n 1:2048:+1G -t 1:EF00 -c 1:"EFI System" $DISK
 # Create root partition (remaining disk space)
 sgdisk -n 2:0:0 -t 2:8300 -c 2:"Root" $DISK
 
-mkfs.ext4 ${DISK}2
+mkfs.ext4 -F ${DISK}2
 mkfs.fat -F 32 ${DISK}1
 
 mount ${DISK}2 /mnt
@@ -202,7 +202,7 @@ chmod +x /mnt/root/arch-chroot.sh
 arch-chroot /mnt /root/arch-chroot.sh "$root_password" "${user_username}" "${user_password}"
 
 rm -rf /mnt/root/arch-chroot.sh
-
+#!/bin/bash
 
 printf '%s' "$(cat <<'EOF'
 #!/bin/bash
@@ -264,8 +264,11 @@ chmod +x /mnt/root/arch-install.sh
 echo "" >> /mnt/etc/profile
 echo "echo '${user_password}' | sudo -S bash '/root/arch-install.sh'" >> /mnt/etc/profile
 
-
 umount -R /mnt
+
+efibootmgr | grep "Arch Linux" | grep -oP 'Boot\K[0-9A-Fa-f]{4}' | while read -r bootnum; do
+  efibootmgr -b "$bootnum" -B
+done
 
 efibootmgr --create --disk "${DISK}" --part 1 --label "Arch Linux" --loader /vmlinuz-linux --unicode "root=UUID=$(blkid -s UUID -o value ${DISK}2) rw initrd=\initramfs-linux.img"
 
