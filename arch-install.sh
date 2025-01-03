@@ -48,38 +48,21 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 echo "/swapfile none swap defaults 0 0" >> /mnt/etc/fstab
 
-arch-chroot /mnt
 
-ln -sf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+sed -i 's/^#SystemMaxUse=.*$/SystemMaxUse=10M/' /mnt/etc/systemd/journald.conf
+sed -i 's/^#MaxRetentionSec=0.*$/MaxRetentionSec=3month/' /mnt/etc/systemd/journald.conf
 
-hwclock --systohc
+echo "${hostname}" >> /mnt/etc/hostname
 
-systemctl enable sshd
-systemctl enable systemd-timesyncd
-systemctl enable systemd-networkd
-systemctl enable systemd-resolved
-ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+echo "[Match]" >> /mnt/etc/systemd/network/20-wired.network
+echo "Name=${INTERFACE}" >> /mnt/etc/systemd/network/20-wired.network
+echo "" >> /mnt/etc/systemd/network/20-wired.network
+echo "[Network]" >> /mnt/etc/systemd/network/20-wired.network
+echo "Address=${ip_address}/24" >> /mnt/etc/systemd/network/20-wired.network
+echo "Gateway=${default_gateway}" >> /mnt/etc/systemd/network/20-wired.network
+echo "DNS=1.0.0.1,8.8.4.4" >> /mnt/etc/systemd/network/20-wired.network
 
-sed -i '/#en_US.UTF-8 UTF-8/s/^#//' /etc/locale.gen
-locale-gen
-echo "LANG=en_US.UTF-8" >> /etc/locale.conf
-
-sed -i 's/^#SystemMaxUse=.*$/SystemMaxUse=10M/' /etc/systemd/journald.conf
-sed -i 's/^#MaxRetentionSec=0.*$/MaxRetentionSec=3month/' /etc/systemd/journald.conf
-
-echo "${hostname}" >> /etc/hostname
-
-echo "[Match]" >> /etc/systemd/network/20-wired.network
-echo "Name=${INTERFACE}" >> /etc/systemd/network/20-wired.network
-echo "" >> /etc/systemd/network/20-wired.network
-echo "[Network]" >> /etc/systemd/network/20-wired.network
-echo "Address=${ip_address}/24" >> /etc/systemd/network/20-wired.network
-echo "Gateway=${default_gateway}" >> /etc/systemd/network/20-wired.network
-echo "DNS=1.0.0.1,8.8.4.4" >> /etc/systemd/network/20-wired.network
-
-mkinitcpio -P
-
-echo "root:${root_password}" | chpasswd
+sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /mnt/etc/sudoers
 
 printf '%s' "$(cat <<'EOF'
 #
@@ -173,11 +156,39 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 EOF
-)" > /etc/skel/.bashrc
+)" > /mnt/etc/skel/.bashrc
+
+
+
+printf '%s' "$(cat <<'EOF'
+#!/bin/bash
+
+root_password="$1"
+user_username="$2"
+user_password="$3"
+
+echo "USERNAME: $user_username"
+
+ln -sf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+
+hwclock --systohc
+
+systemctl enable sshd
+systemctl enable systemd-timesyncd
+systemctl enable systemd-networkd
+systemctl enable systemd-resolved
+ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
+sed -i '/#en_US.UTF-8 UTF-8/s/^#//' /etc/locale.gen
+locale-gen
+echo "LANG=en_US.UTF-8" >> /etc/locale.conf
+
+mkinitcpio -P
+
+echo "root:${root_password}" | chpasswd
 
 useradd -m -G wheel "${user_username}"
 echo "${user_username}:${user_password}" | chpasswd
-sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
 git clone https://aur.archlinux.org/yay.git
 cd yay
@@ -185,6 +196,12 @@ makepkg -s
 pacman -U --noconfirm *.pkg.tar.zst
 cd ..
 rm -rf yay
+EOF
+)" >> /mnt/root/arch-chroot.sh
+
+chmod +x /mnt/root/arch-chroot.sh
+
+
 
 printf '%s' "$(cat <<'EOF'
 #!/bin/bash
@@ -239,12 +256,19 @@ echo "Install complete!"
 exit 0
 
 EOF
-)" >> /root/arch-install.sh
+)" >> /mnt/root/arch-install.sh
 
-chmod +x /root/arch-install.sh
+chmod +x /mnt/root/arch-install.sh
 
-echo "" >> /etc/profile
-echo "echo '${user_password}' | sudo -S bash '/root/arch-install.sh'" >> /etc/profile
+echo "" >> /mnt/etc/profile
+echo "echo '${user_password}' | sudo -S bash '/root/arch-install.sh'" >> /mnt/etc/profile
+
+
+
+arch-chroot /mnt /root/arch-chroot.sh "$root_password" "${user_username}" "${user_password}"
+
+
+
 
 exit
 
