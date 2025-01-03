@@ -188,7 +188,7 @@ echo "root:${root_password}" | chpasswd
 useradd -m -G wheel "${user_username}"
 echo "${user_username}:${user_password}" | chpasswd
 
-cd "/home/${user_username}""
+cd "/home/${user_username}"
 su -c "git clone https://aur.archlinux.org/yay.git" "${user_username}"
 cd yay
 su -c "makepkg -s" "${user_username}"
