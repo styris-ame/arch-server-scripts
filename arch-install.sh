@@ -7,18 +7,18 @@ RESET="\033[0m"
 
 # Print the styled text
 echo -e "${PURPLE}╔═════════════════════════════════════════╗${RESET}"
-echo -e "${PURPLE}║${RESET} ${ORANGE}      Arch Server Install Script       ${RESET} ${PURPLE}║${RESET}"
+echo -e "${PURPLE}║${RESET} ${ORANGE}       Arch Server Install Script      ${RESET} ${PURPLE}║${RESET}"
 echo -e "${PURPLE}╚═════════════════════════════════════════╝${RESET}"
 
 echo ""
 
-read -p "${ORANGE}[1/6]${RESET} Enter desired root password: " root_password
-read -p "${ORANGE}[2/6]${RESET} Enter desired user username: " user_username
-read -p "${ORANGE}[3/6]${RESET} Enter desired user password: " user_password
+echo -n "${ORANGE}[1/6]${RESET} "; read -p "Enter desired root password: " root_password
+echo -n "${ORANGE}[1/6]${RESET} "; read -p "Enter desired user username: " user_username
+echo -n "${ORANGE}[1/6]${RESET} "; read -p "Enter desired user password: " user_password
 
-read -p "${ORANGE}[4/6]${RESET} Enter desired hostname: " hostname
-read -p "${ORANGE}[5/6]${RESET} Enter desired IP address: " ip_address
-read -p "${ORANGE}[6/6]${RESET} Enter desired default gateway: " default_gateway
+echo -n "${ORANGE}[1/6]${RESET} "; read -p "Enter desired hostname: " hostname
+echo -n "${ORANGE}[1/6]${RESET} "; read -p "Enter desired IP address: " ip_address
+echo -n "${ORANGE}[1/6]${RESET} "; read -p "Enter desired default gateway: " default_gateway
 
 
 
@@ -34,11 +34,11 @@ sgdisk -n 1:2048:+1G -t 1:EF00 -c 1:"EFI System" $DISK
 # Create root partition (remaining disk space)
 sgdisk -n 2:0:0 -t 2:8300 -c 2:"Root" $DISK
 
-mkfs.ext4 {$DISK}2
-mkfs.fat -F 32 {$DISK}1
+mkfs.ext4 ${DISK}2
+mkfs.fat -F 32 ${DISK}1
 
-mount {$DISK}2 /mnt
-mount --mkdir {$DISK}1 /mnt/boot
+mount ${DISK}2 /mnt
+mount --mkdir ${DISK}1 /mnt/boot
 
 mkswap -U clear --size 4G --file /mnt/swapfile
 
