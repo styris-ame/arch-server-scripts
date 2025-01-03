@@ -199,6 +199,9 @@ EOF
 
 chmod +x /mnt/root/arch-chroot.sh
 
+arch-chroot /mnt /root/arch-chroot.sh "$root_password" "${user_username}" "${user_password}"
+
+rm -rf /mnt/root/arch-chroot.sh
 
 
 printf '%s' "$(cat <<'EOF'
@@ -261,7 +264,6 @@ chmod +x /mnt/root/arch-install.sh
 echo "" >> /mnt/etc/profile
 echo "echo '${user_password}' | sudo -S bash '/root/arch-install.sh'" >> /mnt/etc/profile
 
-arch-chroot /mnt /root/arch-chroot.sh "$root_password" "${user_username}" "${user_password}"
 
 umount -R /mnt
 
