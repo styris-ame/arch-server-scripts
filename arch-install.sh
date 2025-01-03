@@ -167,8 +167,6 @@ root_password="$1"
 user_username="$2"
 user_password="$3"
 
-echo "USERNAME: $user_username"
-
 ln -sf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
 hwclock --systohc
@@ -192,7 +190,7 @@ echo "${user_username}:${user_password}" | chpasswd
 
 git clone https://aur.archlinux.org/yay.git
 cd yay
-makepkg -s
+su -c "makepkg -s" "${user_username}"
 pacman -U --noconfirm *.pkg.tar.zst
 cd ..
 rm -rf yay
@@ -263,15 +261,10 @@ chmod +x /mnt/root/arch-install.sh
 echo "" >> /mnt/etc/profile
 echo "echo '${user_password}' | sudo -S bash '/root/arch-install.sh'" >> /mnt/etc/profile
 
-
-
 arch-chroot /mnt /root/arch-chroot.sh "$root_password" "${user_username}" "${user_password}"
-
-
-
-
-exit
 
 umount -R /mnt
 
 efibootmgr --create --disk "${DISK}" --part 1 --label "Arch Linux" --loader /vmlinuz-linux --unicode "root=UUID=$(blkid -s UUID -o value ${DISK}2) rw initrd=\initramfs-linux.img"
+
+#reboot
