@@ -263,13 +263,13 @@ if prompt "Install Cockpit?"; then
   if [ "$cockpit_proxy" -eq "0" ]; then
     echo "[WebService]" >> /etc/cockpit/cockpit.conf
     if [[ -n "$cockpit_domain" && ! "$cockpit_domain" =~ ^[[:space:]]*$ ]]; then
-      echo "Origins = https://${domain} wss://${domain}" >> /etc/cockpit/cockpit.conf
+      echo "Origins = https://${cockpit_domain} wss://${cockpit_domain}" >> /etc/cockpit/cockpit.conf
     fi
     echo "ProtocolHeader = X-Forwarded-Proto" >> /etc/cockpit/cockpit.conf
     echo "AllowUnencrypted=true" >> /etc/cockpit/cockpit.conf
   elif [[ -n "$cockpit_domain" && ! "$cockpit_domain" =~ ^[[:space:]]*$ ]]; then
     echo "[WebService]" >> /etc/cockpit/cockpit.conf
-    echo "Origins = https://${domain} wss://${domain}" >> /etc/cockpit/cockpit.conf
+    echo "Origins = https://${cockpit_domain} wss://${cockpit_domain}" >> /etc/cockpit/cockpit.conf
   fi
 
   systemctl enable --now cockpit.socket
