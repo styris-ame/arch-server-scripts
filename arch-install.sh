@@ -1,24 +1,24 @@
 #!/bin/bash
 
 # Define color codes
-PURPLE="\033[1;35m"
-ORANGE="\033[1;33m"
+BLUE="\033[1;36m"
+YELLOW="\033[1;33m"
 RESET="\033[0m"
 
 # Print the styled text
-echo -e "${PURPLE}╔═════════════════════════════════════════╗${RESET}"
-echo -e "${PURPLE}║${RESET} ${ORANGE}       Arch Server Install Script      ${RESET} ${PURPLE}║${RESET}"
-echo -e "${PURPLE}╚═════════════════════════════════════════╝${RESET}"
+echo -e "${BLUE}╔═════════════════════════════════════════╗${RESET}"
+echo -e "${BLUE}║${RESET} ${YELLOW}       Arch Server Install Script      ${RESET} ${BLUE}║${RESET}"
+echo -e "${BLUE}╚═════════════════════════════════════════╝${RESET}"
 
 echo ""
 
-echo -ne "${ORANGE}[1/6]${RESET} "; read -p "Enter desired root password: " root_password
-echo -ne "${ORANGE}[2/6]${RESET} "; read -p "Enter desired user username: " user_username
-echo -ne "${ORANGE}[3/6]${RESET} "; read -p "Enter desired user password: " user_password
+echo -ne "${YELLOW}[1/6]${RESET} "; read -p "Enter desired root password: " root_password
+echo -ne "${YELLOW}[2/6]${RESET} "; read -p "Enter desired user username: " user_username
+echo -ne "${YELLOW}[3/6]${RESET} "; read -p "Enter desired user password: " user_password
 
-echo -ne "${ORANGE}[4/6]${RESET} "; read -p "Enter desired hostname: " hostname
-echo -ne "${ORANGE}[5/6]${RESET} "; read -p "Enter desired IP address: " ip_address
-echo -ne "${ORANGE}[6/6]${RESET} "; read -p "Enter desired default gateway: " default_gateway
+echo -ne "${YELLOW}[4/6]${RESET} "; read -p "Enter desired hostname: " hostname
+echo -ne "${YELLOW}[5/6]${RESET} "; read -p "Enter desired IP address: " ip_address
+echo -ne "${YELLOW}[6/6]${RESET} "; read -p "Enter desired default gateway: " default_gateway
 
 echo ""
 
@@ -202,10 +202,9 @@ EOF
 
 chmod +x /mnt/root/arch-chroot.sh
 
-arch-chroot /mnt /root/arch-chroot.sh "$root_password" "${user_username}" "${user_password}"
+arch-chroot /mnt /root/arch-chroot.sh "${root_password}" "${user_username}" "${user_password}"
 
 rm -rf /mnt/root/arch-chroot.sh
-#!/bin/bash
 
 printf '%s' "$(cat <<'EOF'
 #!/bin/bash
@@ -219,15 +218,17 @@ trap cleanup EXIT
 sed -i '$d; $d' /etc/profile
 sed -i '$d; $d' /etc/sudoers
 
+user_username="$1"
+
 # Define color codes
-PURPLE="\033[1;35m"
-ORANGE="\033[1;33m"
+BLUE="\033[1;36m"
+YELLOW="\033[1;33m"
 RESET="\033[0m"
 
 # Print the styled text
-echo -e "${PURPLE}╔═════════════════════════════════════════╗${RESET}"
-echo -e "${PURPLE}║${RESET} ${ORANGE}    Arch Server Post-Install Script    ${RESET} ${PURPLE}║${RESET}"
-echo -e "${PURPLE}╚═════════════════════════════════════════╝${RESET}"
+echo -e "${BLUE}╔═════════════════════════════════════════╗${RESET}"
+echo -e "${BLUE}║${RESET} ${YELLOW}    Arch Server Post-Install Script    ${RESET} ${BLUE}║${RESET}"
+echo -e "${BLUE}╚═════════════════════════════════════════╝${RESET}"
 echo ""
 
 prompt() {
@@ -248,16 +249,65 @@ prompt() {
 }
 
 if prompt "Install Cockpit?"; then
-  echo "Installing Cockpit..."
-  yay -Syu cockpit cockpit-packagekit networkmanager firewalld udisks2 cockpit-storaged
+  prompt "Configure Cockpit for reverse proxy?"
+  cockpit_proxy=$?
+  read -p "Enter Cockpit domain: " cockpit_domain
+  read -p "Enter TOTP Secret: " totp_secret
+
+  echo ""
+
+  echo -e "${YELLOW}Installing Cockpit...${RESET}"
+
+  yay -Syu --noconfirm cockpit cockpit-packagekit networkmanager firewalld udisks2 cockpit-storaged libpam-google-authenticator
+  
+  if [ "$cockpit_proxy" -eq "0" ]; then
+    echo "[WebService]" >> /etc/cockpit/cockpit.conf
+    if [[ -n "$cockpit_domain" && ! "$cockpit_domain" =~ ^[[:space:]]*$ ]]; then
+      echo "Origins = https://${domain} wss://${domain}" >> /etc/cockpit/cockpit.conf
+    fi
+    echo "ProtocolHeader = X-Forwarded-Proto" >> /etc/cockpit/cockpit.conf
+    echo "AllowUnencrypted=true" >> /etc/cockpit/cockpit.conf
+  elif [[ -n "$cockpit_domain" && ! "$cockpit_domain" =~ ^[[:space:]]*$ ]]; then
+    echo "[WebService]" >> /etc/cockpit/cockpit.conf
+    echo "Origins = https://${domain} wss://${domain}" >> /etc/cockpit/cockpit.conf
+  fi
+
   systemctl enable --now cockpit.socket
+
+  su -c "google-authenticator -t --window-size=3 -q -D -f --rate-limit=3 --rate-time=30 --emergency-codes=0" "${user_username}"
+  if [[ -z "$totp_secret" || "$totp_secret" =~ ^[[:space:]]*$ ]]; then
+    totp_secret=$(su -c "head -n 1 ~/.google_authenticator" "${user_username}")
+    echo -e "Generated TOTP Secret: ${YELLOW}${totp_secret}${RESET}"
+  else
+    su -c "sed -i '1s/.*/${totp_secret}/' ~/.google_authenticator" "${user_username}"
+  fi
+
+  echo "" >> /etc/pam.d/cockpit
+  echo "auth required pam_google_authenticator.so nullok" >> /etc/pam.d/cockpit
+
+  echo ""
+
+  echo -e "${BLUE}Cockpit Installed${RESET}"
 fi
 
-sleep 5
+echo ""
+
+if prompt "Install Docker?"; then
+  echo -e "${YELLOW}Installing Docker...${RESET}"
+  echo ""
+  yay -Syu --noconfirm docker docker-compose
+  systemctl enable --now docker.service
+  echo ""
+  echo -e "${BLUE}Docker Installed${RESET}"
+fi
+
+sleep 3
 
 clear
 
-echo "Install complete!"
+sleep 1
+
+echo "${BLUE}Install complete!{RESET}"
 exit 0
 
 EOF
@@ -266,7 +316,7 @@ EOF
 chmod +x /mnt/root/arch-install.sh
 
 echo "" >> /mnt/etc/profile
-echo "sudo /root/arch-install.sh" >> /mnt/etc/profile
+echo "sudo /root/arch-install.sh \"${user_username}\"" >> /mnt/etc/profile
 
 echo "" >> /mnt/etc/sudoers
 echo "%wheel ALL=(ALL:ALL) NOPASSWD: /root/arch-install.sh" >> /mnt/etc/sudoers
