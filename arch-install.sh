@@ -272,7 +272,11 @@ if prompt "Install Cockpit?"; then
     echo "Origins = https://${cockpit_domain} wss://${cockpit_domain}" >> /etc/cockpit/cockpit.conf
   fi
 
+  systemctl enable --now NetworkManager
   systemctl enable --now cockpit.socket
+
+  firewall-offline-cmd --add-service=ssh 2>/dev/null
+  firewall-offline-cmd --add-service=cockpit
 
   su -c "google-authenticator -t --window-size=3 -q -D -f --rate-limit=3 --rate-time=30 --emergency-codes=0" "${user_username}"
   if [[ -z "$totp_secret" || "$totp_secret" =~ ^[[:space:]]*$ ]]; then
