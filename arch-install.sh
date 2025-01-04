@@ -301,13 +301,16 @@ if prompt "Install Docker?"; then
   echo -e "${BLUE}Docker Installed${RESET}"
 fi
 
-sleep 3
+sleep 1
 
 clear
 
+echo -e "${BLUE}Install complete!${RESET}"
+
 sleep 1
 
-echo "${BLUE}Install complete!{RESET}"
+echo ""
+
 exit 0
 
 EOF
@@ -329,4 +332,4 @@ done
 
 efibootmgr --create --disk "${DISK}" --part 1 --label "Arch Linux" --loader /vmlinuz-linux --unicode "root=UUID=$(blkid -s UUID -o value ${DISK}2) rw initrd=\initramfs-linux.img"
 
-#reboot
+reboot
